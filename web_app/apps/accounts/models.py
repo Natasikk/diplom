@@ -9,9 +9,10 @@ class Profile(models.Model):
     avatar = models.ImageField(verbose_name='Аватар', upload_to='images/avatars/',
                                default='images/avatars/default.jpg',
                                validators=[FileExtensionValidator(allowed_extensions=('png', 'jpg', 'jpeg'))])
+    updated = models.DateTimeField(auto_now=True, verbose_name='Дата и время обновления')
 
     class Meta:
-        verbose_name = "Профиль"
+        verbose_name = "профиль"
         verbose_name_plural = "Профили"
 
     def __str__(self):
