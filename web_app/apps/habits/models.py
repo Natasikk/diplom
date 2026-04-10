@@ -34,7 +34,7 @@ class Habit(models.Model):
 class HabitCompletion(models.Model):
     habit = models.ForeignKey(Habit, on_delete=models.CASCADE, verbose_name='Привычка')
     date = models.DateField(verbose_name='Дата выполнения')
-    comment = models.TextField(blank=True, verbose_name='Комментарий')
+    comment = models.TextField(null=False, blank=True, verbose_name='Комментарий')
     created = models.DateTimeField(auto_now_add=True, verbose_name='Дата отметки')
     updated = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
 
@@ -42,7 +42,7 @@ class HabitCompletion(models.Model):
         verbose_name='отметка выполнения'
         verbose_name_plural = 'Отметки выполнения'
         ordering = ['-date']
-        unique_together = ['habit', 'date']
+        constraints = [models.UniqueConstraint(fields=['habit', 'date'], name='habit_date_unique')]
 
     def __str__(self):
-        return self.date
+        return str(self.habit)
