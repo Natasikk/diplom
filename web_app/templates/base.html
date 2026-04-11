@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -8,12 +9,20 @@
 <body>
   <div class="container-fluid">
         <div class="row">
-            <div class="col-12 p-3" style="background-color: #A2CB8B; color: white;">
-                {% block header %}
-                    <a href="#" class="text-white me-3">Главная</a>
-                    <a href="#" class="text-white me-3">Вход</a>
-                    <a href="#" class="text-white">Регистрация</a>
-                {% endblock %}
+            <div class="col-12 p-3 d-flex justify-content-between align-items-center" style="background-color: #A2CB8B;
+            color: white;">
+                <div>
+                    <a href="{% url 'home' %}" class="text-white me-3">Главная</a>
+                </div>
+                <div>
+                    <a href="{% if user.is_authenticated %}
+                    {% url 'accounts:profile' %}
+                    {% else %}
+                    {% url 'accounts:login' %}
+                    {% endif %}" class="text-white">
+                        <img src="{% static 'images/avatars/user.png' %}" alt="profile" width="30" height="30">
+                    </a>
+                </div>
             </div>
 
             <div class="col-md-2 vh-100 p-3" style="background-color: #DAF9DE;">
