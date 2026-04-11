@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="container-fluid">
+        <div class="row">
+            <div class="col-12 p-3" style="background-color: #A2CB8B; color: white;">
+                {% block header %}
+                    <a href="#" class="text-white me-3">Главная</a>
+                    <a href="#" class="text-white me-3">Вход</a>
+                    <a href="#" class="text-white">Регистрация</a>
+                {% endblock %}
+            </div>
+
+            <div class="col-md-2 vh-100 p-3" style="background-color: #DAF9DE;">
+              {% block sidebar %}
+              <nav>
+                <a href="#" class="d-block btn btn-outline-success w-100 mb-2">Дневник</a>
+                <a href="#" class="d-block btn btn-outline-success w-100">Привычки</a>
+              </nav>
+              {% endblock %}
+            </div>
+
+            <div class="col-md-10 p-4" style="background-color: #DAF9DE;">
+                {% block content %}
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
