@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Мои записи</h2>
+    <a href="{% url 'diary:entry_create' %}" class="btn btn-success">+ Новая запись</a>
+</div>
+
+{% if entries %}
+    {% for entry in entries %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5 class="card-title">{{ entry.title }}</h5>
+                        <p class="card-text text-muted">
+                            {{ entry.date|date:"d.m.Y" }} • {{ entry.emotion.emoji }} {{ entry.emotion.name }}
+                            {% if entry.tags.all %}
+                                • 
+                                {% for tag in entry.tags.all %}
+                                    <span class="badge bg-secondary">{{ tag.name }}</span>
+                                {% endfor %}
+                            {% endif %}
+                        </p>
+                        <p class="card-text">{{ entry.content|truncatewords:30 }}</p>
+                    </div>
+                    <div>
+                        <a href="{% url 'diary:entry_edit' entry.pk %}" class="btn btn-sm btn-primary">Редактировать</a>
+                        <a href="{% url 'diary:entry_delete' entry.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <p>У вас пока нет записей. <a href="{% url 'diary:entry_create' %}">Создайте первую запись</a></p>
+{% endif %}
+{% endblock %}

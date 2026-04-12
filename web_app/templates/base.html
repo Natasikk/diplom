@@ -30,7 +30,7 @@
             <div class="col-md-2 p-3" style="background-color: #DAF9DE; ; min-height: 100vh;">
               {% block sidebar %}
               <nav>
-                <a href="#" class="d-block btn btn-outline-success w-100 mb-2">Дневник</a>
+                <a href="{% url 'diary:entry_list' %}" class="d-block btn btn-outline-success w-100 mb-2">Дневник</a>
                 <a href="#" class="d-block btn btn-outline-success w-100">Привычки</a>
               </nav>
               {% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{{ title }}</h2>
+<form method="post">
+    {% csrf_token %}
+
+    <div class="mb-3">
+        <label class="form-label">Дата</label>
+        <input type="date" name="date" class="form-control"
+               value="{% if form.instance.pk %}{{ form.instance.date|date:'Y-m-d' }}{% else %}{{ now|date:'Y-m-d' }}{% endif %}"
+               required>
+    </div>
+
+    {% for field in form %}
+        {% if field.name != 'date' %}
+            <div class="mb-3">
+                <label class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                    <div class="text-danger">{{ field.errors }}</div>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% endfor %}
+
+    <button type="submit" class="btn btn-success">Сохранить</button>
+    <a href="{% url 'diary:entry_list' %}" class="btn btn-secondary">Отмена</a>
+</form>
+{% endblock %}
