@@ -31,18 +31,14 @@ class DiaryEntryForm(forms.ModelForm):
         self.fields['emotion'].queryset = Emotion.objects.filter(is_active=True)
         self.fields['tags'].queryset = Tag.objects.filter(user=user, is_system=False) | Tag.objects.filter(is_system=True)
 
-        # Применяем классы ко всем полям
         for field in self.fields:
             if field != 'tags':
                 self.fields[field].widget.attrs.update({'class': 'form-control'})
         self.fields['emotion'].widget.attrs.update({'class': 'form-select'})
 
-        # Настройка поля даты
         if self.instance and self.instance.pk:
-            # Редактирование — показываем сохранённую дату
             self.fields['date'].widget = forms.DateInput(
                 attrs={'type': 'date', 'class': 'form-control', 'value': self.instance.date.isoformat()})
         else:
-            # Новая запись — сегодняшняя дата
             self.fields['date'].widget = forms.DateInput(
                 attrs={'type': 'date', 'class': 'form-control', 'value': date.today().isoformat()})

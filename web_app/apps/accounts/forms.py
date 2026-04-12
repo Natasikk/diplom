@@ -27,11 +27,6 @@ class CustomUserCreationForm(UserCreationForm):
             raise forms.ValidationError('Пользователь с таким email уже существует')
         return email
 
-    def save(self, commit=True):
-        user = super().save(commit=commit)
-        # Не сохраняем phone и birth_date в User, они пойдут в Profile
-        return user
-
 
 class CustomAuthenticationForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):

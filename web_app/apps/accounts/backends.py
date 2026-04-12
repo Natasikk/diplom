@@ -7,8 +7,8 @@ User = get_user_model()
 
 class EmailOrUsernameBackend(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
-        if username is None:
-            username = kwargs.get(User.USERNAME_FIELD)
+        if not username or not password:
+            return None
 
         try:
             user = User.objects.get(Q(username=username) | Q(email=username))

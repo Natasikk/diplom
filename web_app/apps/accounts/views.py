@@ -5,7 +5,6 @@ from django.conf import settings
 from .forms import CustomUserCreationForm
 from .models import Profile
 from .forms import UserUpdateForm, ProfileUpdateForm
-from django.contrib import messages
 
 @login_required
 def profile(request):
@@ -17,14 +16,10 @@ def register(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            Profile.objects.get_or_create(
-                user=user,
-                defaults={
-                    'phone': form.cleaned_data.get('phone', ''),
-                    'birth_date': form.cleaned_data.get('birth_date')
-                }
-            )
-            # Указываем бэкенд
+            profile = user.profile  # или Profile.objects.get(user=user)
+            profile.phone = form.cleaned_data.get('phone', '')
+            profile.birth_date = form.cleaned_data.get('birth_date')
+            profile.save()
             user.backend = settings.AUTHENTICATION_BACKENDS[0]
             login(request, user)
             return redirect('home')
@@ -44,7 +39,6 @@ def profile_edit(request):
         if user_form.is_valid() and profile_form.is_valid():
             user_form.save()
             profile_form.save()
-            messages.success(request, 'Профиль успешно обновлён')
             return redirect('accounts:profile')
     else:
         user_form = UserUpdateForm(instance=request.user)

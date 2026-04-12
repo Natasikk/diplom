@@ -65,19 +65,15 @@ def habit_today(request):
             completions[habit.id] = {'completed': False, 'comment': ''}
 
     if request.method == 'POST':
-        # Получаем список всех отмеченных привычек
         checked_habit_ids = request.POST.getlist('habit_id')
 
-        # Для всех привычек пользователя
         for habit in habits:
             completion = HabitCompletion.objects.filter(habit=habit, date=today)
             if str(habit.id) in checked_habit_ids:
-                # Если отмечено, но записи нет — создаём
                 if not completion.exists():
                     HabitCompletion.objects.create(habit=habit, date=today, comment='')
                     messages.success(request, f'Отмечено: "{habit.name}"')
             else:
-                # Если не отмечено, но запись есть — удаляем
                 if completion.exists():
                     completion.delete()
                     messages.success(request, f'Отметка снята: "{habit.name}"')

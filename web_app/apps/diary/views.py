@@ -43,6 +43,5 @@ def entry_delete(request, pk):
     entry = get_object_or_404(DiaryEntry, pk=pk, user=request.user)
     if request.method == 'POST':
         entry.delete()
-        messages.success(request, 'Запись удалена')
         return redirect('diary:entry_list')
     return render(request, 'diary/entry_confirm_delete.html', {'entry': entry})

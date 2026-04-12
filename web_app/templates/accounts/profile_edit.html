@@ -5,8 +5,7 @@
 
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    
-    <h4>Основные данные</h4>
+
     {% for field in user_form %}
         <div class="mb-3">
             <label class="form-label">{{ field.label }}</label>
@@ -16,8 +15,7 @@
             {% endif %}
         </div>
     {% endfor %}
-    
-    <h4>Дополнительная информация</h4>
+
     {% for field in profile_form %}
         <div class="mb-3">
             <label class="form-label">{{ field.label }}</label>
