@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Отметка привычек за {{ today|date:"d.m.Y" }}</h2>
+
+{% if habits %}
+    <form method="post" id="habits-form">
+        {% csrf_token %}
+        {% for habit in habits %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="habit_id" value="{{ habit.id }}"
+                               id="habit_{{ habit.id }}"
+                               {% for key, value in completions.items %}
+                                   {% if key == habit.id and value.completed %}checked{% endif %}
+                               {% endfor %}
+                               onchange="this.form.submit()">
+                        <label class="form-check-label" for="habit_{{ habit.id }}">
+                            <strong>{{ habit.name }}</strong>
+                            {% if habit.category %}
+                                <span class="badge bg-secondary">{{ habit.category.name }}</span>
+                            {% endif %}
+                        </label>
+                    </div>
+                    {% if habit.description %}
+                        <p class="text-muted mt-2">{{ habit.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </form>
+{% else %}
+    <p>У вас пока нет привычек. <a href="{% url 'habits:habit_create' %}">Создайте первую привычку</a></p>
+{% endif %}
+
+<a href="{% url 'habits:habit_list' %}" class="btn btn-secondary">К списку привычек</a>
+{% endblock %}

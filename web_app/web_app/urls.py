@@ -9,6 +9,7 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('accounts/', include('apps.accounts.urls')),
     path('diary/', include('apps.diary.urls')),
+    path('habits/', include('apps.habits.urls')),
 ]
 
 if settings.DEBUG:

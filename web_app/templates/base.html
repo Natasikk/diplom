@@ -31,7 +31,7 @@
               {% block sidebar %}
               <nav>
                 <a href="{% url 'diary:entry_list' %}" class="d-block btn btn-outline-success w-100 mb-2">Дневник</a>
-                <a href="#" class="d-block btn btn-outline-success w-100">Привычки</a>
+                <a href="{% url 'habits:habit_list' %}" class="d-block btn btn-outline-success w-100">Привычки</a>
               </nav>
               {% endblock %}
             </div>
