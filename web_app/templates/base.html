@@ -12,20 +12,22 @@
             <div class="col-12 p-3 d-flex justify-content-between align-items-center" style="background-color: #A2CB8B;
             color: white;">
                 <div>
-                    <a href="{% url 'home' %}" class="text-white me-3">Главная</a>
+                    <a href="{% url 'home' %}">
+                        <img src="{% static 'icons/home.png' %}" alt="home" width="40" height="40">
+                    </a>
                 </div>
                 <div>
-                    <a href="{% if user.is_authenticated %}
-                    {% url 'accounts:profile' %}
-                    {% else %}
-                    {% url 'accounts:login' %}
-                    {% endif %}" class="text-white">
-                        <img src="{% static 'images/avatars/user.png' %}" alt="profile" width="30" height="30">
+                    <a href="{% if user.is_authenticated %}{% url 'accounts:profile' %}{% else %}{% url 'accounts:login' %}{% endif %}">
+                        {% if user.is_authenticated and user.profile.avatar %}
+                        <img src="{{ user.profile.avatar.url }}" alt="avatar" width="40" height="40" style="border-radius: 50%; object-fit: cover;">
+                        {% else %}
+                        <img src="{% static 'images/avatars/user.png' %}" alt="profile" width="40" height="40" style="border-radius: 50%; object-fit: cover;">
+                        {% endif %}
                     </a>
                 </div>
             </div>
 
-            <div class="col-md-2 vh-100 p-3" style="background-color: #DAF9DE;">
+            <div class="col-md-2 p-3" style="background-color: #DAF9DE; ; min-height: 100vh;">
               {% block sidebar %}
               <nav>
                 <a href="#" class="d-block btn btn-outline-success w-100 mb-2">Дневник</a>

@@ -4,10 +4,10 @@ from django.core.validators import FileExtensionValidator
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='Пользователь')
-    phone = models.CharField(max_length=20, verbose_name='Телефон')
+    phone = models.CharField(max_length=20, blank=True, verbose_name='Телефон')
     birth_date = models.DateField(null=True, blank=True, verbose_name='Дата Рождения')
     avatar = models.ImageField(verbose_name='Аватар', upload_to='images/avatars/',
-                               default='images/avatars/default.jpg',
+                               default='images/avatars/default.png',
                                validators=[FileExtensionValidator(allowed_extensions=('png', 'jpg', 'jpeg'))])
     updated = models.DateTimeField(auto_now=True, verbose_name='Дата и время обновления')
 
