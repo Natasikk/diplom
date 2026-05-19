@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% block content_class %}no-bg{% endblock %}
+
 {% block title %}Новая привычка{% endblock %}
 
 {% block content %}
@@ -107,6 +109,10 @@
     .btn-habit {
         border-radius: 30px;
         transition: all 0.5s ease;
+    }
+    .main-content.no-bg {
+        background: transparent !important;
+        box-shadow: none !important;
     }
 </style>
 {% endblock %}

@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'apps.diary.apps.DiaryConfig',
     'apps.habits.apps.HabitsConfig',
     'apps.core.apps.CoreConfig',
+    'apps.ai.apps.AiConfig',
 ]
 
 MIDDLEWARE = [
@@ -131,3 +132,5 @@ AUTHENTICATION_BACKENDS = [
     'apps.accounts.backends.EmailOrUsernameBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
+
+GIGACHAT_CREDENTIALS = "MDE5ZTNmYTctZmZmMi03MzllLTg0NmEtNDVjMDg4YmE0MDFiOjQ1MTY1ZjBlLWI4M2QtNDM4MS1iMTIxLWVmZDlkMWRjNjA0NA=="

@@ -10,6 +10,7 @@ urlpatterns = [
     path('accounts/', include('apps.accounts.urls')),
     path('diary/', include('apps.diary.urls')),
     path('habits/', include('apps.habits.urls')),
+    path('ai/', include('apps.ai.urls')),
 ]
 
 if settings.DEBUG:
