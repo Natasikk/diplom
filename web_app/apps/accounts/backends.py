@@ -10,11 +10,8 @@ class EmailOrUsernameBackend(ModelBackend):
         if not username or not password:
             return None
 
-        try:
-            user = User.objects.get(Q(username=username) | Q(email=username))
-        except User.DoesNotExist:
-            return None
+        user = User.objects.filter(Q(username=username) | Q(email=username)).first()
 
-        if user.check_password(password) and self.user_can_authenticate(user):
+        if user and user.check_password(password) and self.user_can_authenticate(user):
             return user
         return None

@@ -1,30 +1,303 @@
 {% extends "base.html" %}
 
+{% block title %}Создание записи{% endblock %}
+
+{% block content_class %}no-bg{% endblock %}
+
 {% block content %}
-<h2>{{ title }}</h2>
-<form method="post">
-    {% csrf_token %}
-
-    <div class="mb-3">
-        <label class="form-label">Дата</label>
-        <input type="date" name="date" class="form-control"
-               value="{% if form.instance.pk %}{{ form.instance.date|date:'Y-m-d' }}{% else %}{{ now|date:'Y-m-d' }}{% endif %}"
-               required>
-    </div>
-
-    {% for field in form %}
-        {% if field.name != 'date' %}
-            <div class="mb-3">
-                <label class="form-label">{{ field.label }}</label>
-                {{ field }}
-                {% if field.errors %}
-                    <div class="text-danger">{{ field.errors }}</div>
-                {% endif %}
+<div class="row justify-content-center">
+    <div class="col-lg-10 col-xl-9">
+        <div class="card border-0 shadow-sm" style="border-radius: 25px; overflow: hidden;">
+            <div class="card-header bg-success text-white py-3">
+                <i class="fas fa-pen me-2"></i>{{ title }}
             </div>
-        {% endif %}
-    {% endfor %}
 
-    <button type="submit" class="btn btn-success">Сохранить</button>
-    <a href="{% url 'diary:entry_list' %}" class="btn btn-secondary">Отмена</a>
-</form>
+            <div class="card-body p-4">
+                <form method="post" id="diary-form">
+                    {% csrf_token %}
+
+                    <!-- Дата -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-secondary mb-2">
+                            <i class="fas fa-calendar-alt me-2 text-success"></i>Дата
+                        </label>
+                        <input type="date" name="date" id="date-input" class="form-control custom-input"
+                               value="{% if form.instance.pk %}{{ form.instance.date|date:'Y-m-d' }}{% else %}{{ now|date:'Y-m-d' }}{% endif %}"
+                               max="{{ now|date:'Y-m-d' }}" required>
+                    </div>
+
+                    <!-- Эмоции -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-secondary mb-2">
+                            <i class="fas fa-smile me-2 text-success"></i>{{ form.emotion.label }}
+                        </label>
+                        <div class="d-flex gap-3 flex-wrap">
+                            {% for emotion in emotions %}
+                                <label class="emotion-option btn btn-outline-secondary btn-entry" for="emotion_{{ emotion.id }}">
+                                    <input type="radio" name="emotion" value="{{ emotion.id }}" id="emotion_{{ emotion.id }}"
+                                           {% if form.instance.emotion.id == emotion.id %}checked{% endif %}>
+                                    <span class="emoji-display">{{ emotion.emoji }}</span>
+                                    <span class="emotion-name">{{ emotion.name }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        {% if form.emotion.errors %}
+                            <div class="text-danger small mt-2">{{ form.emotion.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Теги -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-secondary mb-2">
+                            <i class="fas fa-tags me-2 text-success"></i>Теги
+                        </label>
+                        <div id="selected-tags" class="mb-2 d-flex flex-wrap gap-1">
+                            {% if form.instance.pk %}
+                                {% for tag in form.instance.tags.all %}
+                                    <span class="badge bg-success p-2" data-tag-id="{{ tag.id }}">
+                                        {{ tag.name }}
+                                        <button type="button" class="btn-close btn-close-white ms-1" onclick="removeTag(this)"></button>
+                                    </span>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div id="available-tags" class="mb-2">
+                            {% for tag in all_tags %}
+                                <button type="button" class="btn btn-sm btn-outline-secondary m-1 tag-btn" onclick="addTag({{ tag.id }}, '{{ tag.name }}')">
+                                    {{ tag.name }}
+                                </button>
+                            {% empty %}
+                                <small class="text-muted">Нет доступных тегов. Создайте их в профиле.</small>
+                            {% endfor %}
+                        </div>
+                        <select name="tags" id="tags-hidden" multiple style="display: none;">
+                            {% if form.instance.pk %}
+                                {% for tag in form.instance.tags.all %}
+                                    <option value="{{ tag.id }}" selected>{{ tag.id }}</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+
+                    <!-- Заголовок -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-secondary mb-2">
+                            <i class="fas fa-heading me-2 text-success"></i>{{ form.title.label }}
+                        </label>
+                        {{ form.title }}
+                    </div>
+
+                    <!-- Содержание -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-secondary mb-2">
+                            <i class="fas fa-paragraph me-2 text-success"></i>{{ form.content.label }}
+                        </label>
+                        {{ form.content }}
+                    </div>
+
+                    <!-- Достижения дня -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-secondary mb-2">
+                            <i class="fas fa-trophy me-2 text-success"></i>Достижения дня
+                        </label>
+                        <div id="achievements-list">
+                            {% if form.instance.achievements %}
+                                {% for achievement in form.instance.achievements.splitlines %}
+                                    <div class="input-group mb-2">
+                                        <input type="text" name="achievements" class="form-control custom-input" value="{{ achievement }}" placeholder="Достижение">
+                                        <button type="button" class="btn btn-outline-danger" onclick="removeField(this)">−</button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-success mt-1" onclick="addField('achievements-list', 'achievements')">
+                            <i class="fas fa-plus me-1"></i>Добавить достижение
+                        </button>
+                    </div>
+
+                    <!-- Трудности дня -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-secondary mb-2">
+                            <i class="fas fa-exclamation-triangle me-2 text-warning"></i>Трудности дня
+                        </label>
+                        <div id="difficulties-list">
+                            {% if form.instance.difficulties %}
+                                {% for difficulty in form.instance.difficulties.splitlines %}
+                                    <div class="input-group mb-2">
+                                        <input type="text" name="difficulties" class="form-control custom-input" value="{{ difficulty }}" placeholder="Трудность">
+                                        <button type="button" class="btn btn-outline-danger" onclick="removeField(this)">−</button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-success mt-1" onclick="addField('difficulties-list', 'difficulties')">
+                            <i class="fas fa-plus me-1"></i>Добавить трудность
+                        </button>
+                    </div>
+
+                    <!-- Планы на завтра -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-secondary mb-2">
+                            <i class="fas fa-calendar-day me-2 text-info"></i>Планы на завтра
+                        </label>
+                        <div id="plans-list">
+                            {% if form.instance.tomorrow_plans %}
+                                {% for plan in form.instance.tomorrow_plans.splitlines %}
+                                    <div class="input-group mb-2">
+                                        <input type="text" name="tomorrow_plans" class="form-control custom-input" value="{{ plan }}" placeholder="План">
+                                        <button type="button" class="btn btn-outline-danger" onclick="removeField(this)">−</button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-success mt-1" onclick="addField('plans-list', 'plans')">
+                            <i class="fas fa-plus me-1"></i>Добавить план
+                        </button>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-success px-4" style="border-radius: 30px;">
+                            <i class="fas fa-save me-2"></i>Сохранить
+                        </button>
+                        <a href="{% url 'diary:entry_list' %}" class="btn btn-outline-secondary px-4" style="border-radius: 30px;">
+                            <i class="fas fa-times me-2"></i>Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .custom-input {
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 14px;
+        transition: all 0.2s ease;
+    }
+    .custom-input:focus {
+        border-color: #8bc34a;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(139, 195, 74, 0.1);
+    }
+    .emotion-option {
+        text-align: center;
+        padding: 10px;
+        min-width: 80px;
+        cursor: pointer;
+        border-radius: 16px;
+    }
+    .emotion-option:hover {
+        background-color: #d4d4d4;;
+        transform: scale(1.05);
+    }
+    .emotion-option .emoji-display {
+        font-size: 36px;
+        display: block;
+    }
+    .emotion-option .emotion-name {
+        font-size: 12px;
+    }
+    input[type="radio"] {
+        display: none;
+    }
+    .emotion-option:has(input:checked) {
+        background-color: #8bc34a;
+        border-color: #6b8c42;
+        color: white;
+    }
+    .btn-close-white {
+        filter: brightness(0) invert(1);
+    }
+    .card-header {
+        background: linear-gradient(135deg, #6b8c42 0%, #8bc34a 100%);
+    }
+    .main-content.no-bg {
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+    .btn-entry {
+        transition: all 0.5s ease;
+    }
+</style>
+
+<script>
+    const dateInput = document.getElementById('date-input');
+
+function getLocalToday() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+const today = getLocalToday();
+
+    function validateAndFixDate() {
+        let selectedDate = dateInput.value;
+        if (selectedDate && selectedDate > today) {
+            dateInput.value = today;
+        }
+    }
+
+    dateInput.addEventListener('blur', validateAndFixDate);
+    dateInput.addEventListener('change', validateAndFixDate);
+
+    const selectedTagsDiv = document.getElementById('selected-tags');
+    const hiddenSelect = document.getElementById('tags-hidden');
+
+    function addTag(tagId, tagName) {
+        if (selectedTagsDiv.querySelector(`[data-tag-id="${tagId}"]`)) return;
+
+        const tagSpan = document.createElement('span');
+        tagSpan.className = 'badge bg-success p-2';
+        tagSpan.setAttribute('data-tag-id', tagId);
+        tagSpan.innerHTML = `${tagName} <button type="button" class="btn-close btn-close-white ms-1" onclick="removeTag(this)"></button>`;
+        selectedTagsDiv.appendChild(tagSpan);
+
+        const option = document.createElement('option');
+        option.value = tagId;
+        option.selected = true;
+        hiddenSelect.appendChild(option);
+    }
+
+    function removeTag(button) {
+        const tagSpan = button.parentElement;
+        const tagId = tagSpan.dataset.tagId;
+        tagSpan.remove();
+
+        const option = hiddenSelect.querySelector(`option[value="${tagId}"]`);
+        if (option) option.remove();
+    }
+
+    function addField(listId, fieldType) {
+        const list = document.getElementById(listId);
+        let name = '', placeholder = '';
+        if (fieldType === 'achievements') {
+            name = 'achievements';
+            placeholder = 'Достижение';
+        } else if (fieldType === 'difficulties') {
+            name = 'difficulties';
+            placeholder = 'Трудность';
+        } else if (fieldType === 'plans') {
+            name = 'tomorrow_plans';
+            placeholder = 'План';
+        }
+
+        const newDiv = document.createElement('div');
+        newDiv.className = 'input-group mb-2';
+        newDiv.innerHTML = `
+            <input type="text" name="${name}" class="form-control custom-input" placeholder="${placeholder}">
+            <button type="button" class="btn btn-outline-danger" onclick="removeField(this)">−</button>
+        `;
+        list.appendChild(newDiv);
+    }
+
+    function removeField(button) {
+        button.parentElement.remove();
+    }
+</script>
 {% endblock %}

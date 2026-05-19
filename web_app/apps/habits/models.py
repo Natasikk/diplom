@@ -18,7 +18,7 @@ class Habit(models.Model):
     category = models.ForeignKey(HabitCategory, on_delete=models.SET_NULL, null=True, blank=True,
                                  verbose_name='Категория')
     name = models.CharField(max_length=250, verbose_name='Название привычки')
-    description = models.TextField(blank=True, verbose_name='Описание')
+    description = models.TextField(max_length=80, blank=True, verbose_name='Описание')
     is_active = models.BooleanField(default=True, verbose_name='Активна')
     created = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')

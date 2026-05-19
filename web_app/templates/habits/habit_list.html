@@ -1,35 +1,463 @@
 {% extends "base.html" %}
 
+{% block title %}Привычки{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Мои привычки</h2>
-    <div>
-        <a href="{% url 'habits:habit_today' %}" class="btn btn-info me-2">Отметить за сегодня</a>
-        <a href="{% url 'habits:habit_create' %}" class="btn btn-success">+ Новая привычка</a>
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h2 class="fw-bold text-success">
+        <i class="fas fa-check-circle me-2"></i>Мои привычки
+    </h2>
+    <a href="{% url 'habits:habit_create' %}" class="btn btn-success px-4 btn-habit">
+        <i class="fas fa-plus me-2"></i>Новая привычка
+    </a>
+</div>
+
+<!-- БЛОК ФИЛЬТРАЦИИ -->
+<div class="card border-0 shadow-sm mb-4" style="border-radius: 20px; overflow: visible;">
+    <div class="card-header text-white py-3">
+        <i class="fas fa-filter me-2"></i>Фильтры и поиск
+    </div>
+    <div class="card-body p-4">
+        <form method="get" action="" id="filter-form">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold text-secondary mb-2">
+                        <i class="fas fa-search me-1 text-success"></i>Поиск по названию
+                    </label>
+                    <input type="text" name="search_name" class="form-control custom-input" placeholder="Например: Зарядка" value="{{ search_name }}">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold text-secondary mb-2">
+                        <i class="fas fa-tags me-1 text-success"></i>Категории
+                    </label>
+                    <div class="dropdown w-100">
+                        <button class="btn btn-outline-secondary w-100 text-start d-flex justify-content-between align-items-center custom-dropdown"
+                                type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                            <span id="categories-selected-label">
+                                {% if selected_categories %}
+                                    Выбрано: {{ selected_categories|length }}
+                                {% else %}
+                                    Все категории
+                                {% endif %}
+                            </span>
+                            <i class="fas fa-chevron-down small"></i>
+                        </button>
+                        <ul class="dropdown-menu p-3 shadow-sm" style="max-height: 300px; overflow-y: auto;">
+                            <li class="mb-2 pb-2 border-bottom">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="category_all" onclick="toggleAllCategories(this)">
+                                    <label class="form-check-label fw-bold" for="category_all">Все категории</label>
+                                </div>
+                            </li>
+                            {% for category in all_categories %}
+                            <li class="mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input category-checkbox" type="checkbox" name="categories" value="{{ category.id }}" id="category_{{ category.id }}"
+                                           {% if category.id in selected_categories %}checked{% endif %}
+                                           onchange="updateSelectedLabels()">
+                                    <label class="form-check-label" for="category_{{ category.id }}">
+                                        {{ category.name }}
+                                    </label>
+                                </div>
+                            </li>
+                            {% empty %}
+                            <li class="text-muted small">Нет доступных категорий</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-12 mt-3">
+                    <button type="submit" class="btn btn-success px-4 btn-habit">
+                        <i class="fas fa-search me-2"></i>Применить
+                    </button>
+                    <a href="{% url 'habits:habit_list' %}" class="btn btn-outline-secondary px-4 btn-habit">
+                        <i class="fas fa-undo-alt me-2"></i>Сбросить
+                    </a>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 
-{% if habits %}
-    {% for habit in habits %}
-        <div class="card mb-3">
-            <div class="card-body d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="card-title">{{ habit.name }}</h5>
-                    {% if habit.category %}
-                        <span class="badge bg-secondary">{{ habit.category.name }}</span>
-                    {% endif %}
-                    {% if habit.description %}
-                        <p class="card-text mt-2">{{ habit.description }}</p>
-                    {% endif %}
-                </div>
-                <div>
-                    <a href="{% url 'habits:habit_edit' habit.pk %}" class="btn btn-sm btn-primary">Редактировать</a>
-                    <a href="{% url 'habits:habit_delete' habit.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+{% if habits_data %}
+    <div class="row g-4">
+        {% for habit_data in habits_data %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm habit-card" style="border-radius: 20px; overflow: hidden;">
+                    <div class="card-header text-white py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0 fw-bold">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    {{ habit_data.habit.name }}
+                                </h5>
+                                {% if habit_data.habit.category %}
+                                    <small class="text-white-50">
+                                        <i class="fas fa-tag me-1"></i>{{ habit_data.habit.category.name }}
+                                    </small>
+                                {% endif %}
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-light rounded-circle" type="button" data-bs-toggle="dropdown" style="width: 32px; height: 32px;">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu shadow-sm border-0 rounded-3">
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'habits:habit_edit' habit_data.habit.pk %}">
+                                            <i class="fas fa-edit me-2 text-success"></i>Редактировать
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item text-danger delete-habit-btn" href="#"
+                                           data-url="{% url 'habits:habit_delete' habit_data.habit.pk %}"
+                                           data-name="{{ habit_data.habit.name }}">
+                                            <i class="fas fa-trash me-2"></i>Удалить
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        {% if habit_data.habit.description %}
+                            <small class="text-white-50 d-block mt-2">{{ habit_data.habit.description|truncatewords:10 }}</small>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <a href="?{{ request.GET.urlencode }}&habit={{ habit_data.habit.id }}&year={{ habit_data.prev_year }}&month={{ habit_data.prev_month }}"
+                               class="btn btn-sm btn-outline-success rounded-circle" style="width: 32px; height: 32px;">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                            <div class="text-center">
+                                <span class="badge-custom">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    {{ habit_data.current_month_name }} {{ habit_data.current_year }}
+                                </span>
+                            </div>
+                            {% if habit_data.can_go_forward %}
+                                <a href="?{{ request.GET.urlencode }}&habit={{ habit_data.habit.id }}&year={{ habit_data.next_year }}&month={{ habit_data.next_month }}"
+                                   class="btn btn-sm btn-outline-success rounded-circle" style="width: 32px; height: 32px;">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            {% else %}
+                                <button class="btn btn-sm btn-outline-secondary rounded-circle" disabled style="width: 32px; height: 32px; opacity: 0.4;">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            {% endif %}
+                        </div>
+
+                        <div class="habit-calendar">
+                            <div class="row g-0 text-center mb-2">
+                                {% for day_name in week_days %}
+                                    <div class="col calendar-weekday">{{ day_name }}</div>
+                                {% endfor %}
+                            </div>
+
+                            {% for week in habit_data.calendar_data %}
+                                <div class="row g-0 mb-1">
+                                    {% for day in week %}
+                                        <div class="col text-center calendar-day-cell">
+                                            {% if day.day %}
+                                                <div class="habit-day-circle
+                                                            {% if day.completed %}completed{% endif %}
+                                                            {% if not day.can_check %}future{% endif %}"
+                                                     data-habit-id="{{ habit_data.habit.id }}"
+                                                     data-date="{{ day.date_str }}"
+                                                     data-completed="{{ day.completed|yesno:'true,false' }}"
+                                                     data-can-check="{{ day.can_check|yesno:'true,false' }}"
+                                                     data-comment="{{ day.comment }}"
+                                                     title="{{ day.comment }}">
+                                                    <span class="day-num">{{ day.day }}</span>
+                                                    <span class="check-mark">
+                                                        {% if day.completed %}✓{% else %}○{% endif %}
+                                                    </span>
+                                                </div>
+                                            {% else %}
+                                                <div style="height: 38px;"></div>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    {% endfor %}
+        {% endfor %}
+    </div>
 {% else %}
-    <p>У вас пока нет привычек. <a href="{% url 'habits:habit_create' %}">Создайте первую привычку</a></p>
+    <div class="alert alert-info text-center border-0 shadow-sm" style="border-radius: 20px;">
+        <i class="fas fa-info-circle fa-2x mb-2 text-success"></i>
+        <p class="mb-0">
+            {% if search_name or selected_categories %}
+                Нет привычек, соответствующих фильтрам.
+            {% else %}
+                У вас пока нет привычек.
+            {% endif %}
+        </p>
+    </div>
 {% endif %}
+
+<style>
+    .badge-custom {
+        background: linear-gradient(135deg, #8bc34a, #6b8c42);
+        border-radius: 30px;
+        padding: 6px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
+        display: inline-block;
+    }
+    .habit-calendar {
+        margin-top: 5px;
+    }
+    .calendar-weekday {
+        font-size: 11px;
+        font-weight: 700;
+        color: #6b8c42;
+        padding: 6px 0;
+    }
+    .calendar-day-cell {
+        padding: 3px;
+    }
+    .habit-day-circle {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+    }
+    .habit-day-circle:hover:not(.future) {
+        background-color: #e8f5e9;
+        transform: scale(1.05);
+        border-color: #8bc34a;
+    }
+    .habit-day-circle.completed {
+        background-color: #c8e6c9;
+        border-color: #8bc34a;
+    }
+    .habit-day-circle.future {
+        cursor: not-allowed;
+        opacity: 0.4;
+    }
+    .day-num {
+        font-size: 11px;
+        font-weight: 600;
+        color: #4a6b2f;
+    }
+    .check-mark {
+        font-size: 16px;
+        font-weight: bold;
+    }
+    .completed .check-mark {
+        color: #2e7d32;
+    }
+    .habit-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .habit-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
+    }
+    .custom-input {
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 14px;
+    }
+    .custom-input:focus {
+        border-color: #8bc34a;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(139, 195, 74, 0.1);
+    }
+    .custom-dropdown {
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 10px 14px;
+        background-color: white;
+    }
+    .card-header {
+        background: linear-gradient(135deg, #6b8c42 0%, #8bc34a 100%);
+    }
+    .btn-habit {
+        border-radius: 30px;
+        transition: all 0.3s ease;
+    }
+</style>
+
+<script>
+    function sendMarkRequest(circle, habitId, date, newCompleted, comment) {
+        fetch('{% url "habits:toggle_habit_ajax" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: `habit_id=${habitId}&date=${date}&checked=${newCompleted}&comment=${encodeURIComponent(comment || '')}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                circle.dataset.completed = newCompleted;
+                circle.dataset.comment = comment || '';
+                const checkMark = circle.querySelector('.check-mark');
+                if (newCompleted) {
+                    circle.classList.add('completed');
+                    checkMark.textContent = '✓';
+                    if (comment && comment.trim() !== '') circle.title = comment;
+                } else {
+                    circle.classList.remove('completed');
+                    checkMark.textContent = '○';
+                    circle.title = '';
+                }
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Ошибка',
+                    text: data.error || 'Неизвестная ошибка',
+                    confirmButtonColor: '#d33'
+                });
+            }
+        })
+        .catch(error => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Ошибка',
+                text: 'Ошибка при отправке запроса',
+                confirmButtonColor: '#d33'
+            });
+        });
+    }
+
+    function updateSelectedLabels() {
+        const selected = document.querySelectorAll('.category-checkbox:checked');
+        const label = document.getElementById('categories-selected-label');
+        if (selected.length === 0) {
+            label.textContent = 'Все категории';
+        } else if (selected.length === 1) {
+            label.textContent = selected[0].parentElement.querySelector('label').innerText;
+        } else {
+            label.textContent = `Выбрано: ${selected.length}`;
+        }
+    }
+
+    function toggleAllCategories(checkbox) {
+        document.querySelectorAll('.category-checkbox').forEach(cb => cb.checked = checkbox.checked);
+        updateSelectedLabels();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateSelectedLabels();
+
+        document.querySelectorAll('.habit-day-circle').forEach(circle => {
+            const comment = circle.dataset.comment;
+            if (comment && comment.trim()) circle.title = comment;
+
+            circle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (this.dataset.canCheck !== 'true') {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Недоступно',
+                        text: 'Нельзя отметить будущие дни',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    return;
+                }
+
+                const habitId = this.dataset.habitId;
+                const date = this.dataset.date;
+                const currentlyCompleted = this.dataset.completed === 'true';
+                const newCompleted = !currentlyCompleted;
+
+                if (newCompleted) {
+                    const habitName = this.closest('.card').querySelector('.card-header h5').innerText;
+                    Swal.fire({
+                        title: `Отметить "${habitName}"?`,
+                        html: `Дата: <strong>${date}</strong>`,
+                        input: 'text',
+                        inputPlaceholder: 'Комментарий (необязательно)',
+                        showCancelButton: true,
+                        confirmButtonColor: '#28a745',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Да, отметить',
+                        cancelButtonText: 'Отмена'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            sendMarkRequest(this, habitId, date, newCompleted, result.value || '');
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Отмечено!',
+                                text: 'Привычка успешно отмечена',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Снять отметку?',
+                        text: 'Вы уверены, что хотите снять отметку о выполнении?',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Да, снять',
+                        cancelButtonText: 'Отмена'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            sendMarkRequest(this, habitId, date, newCompleted, '');
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Отметка снята',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        document.querySelectorAll('.delete-habit-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const url = this.dataset.url;
+                const habitName = this.dataset.name;
+                Swal.fire({
+                    title: `Удалить привычку "${habitName}"?`,
+                    text: 'Это действие необратимо.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Да, удалить',
+                    cancelButtonText: 'Отмена'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Удалено!',
+                            text: 'Привычка успешно удалена',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                        setTimeout(() => {
+                            window.location.href = url;
+                        }, 500);
+                    }
+                });
+            });
+        });
+    });
+</script>
 {% endblock %}

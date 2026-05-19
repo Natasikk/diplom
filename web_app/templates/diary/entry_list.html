@@ -1,38 +1,312 @@
 {% extends "base.html" %}
 
+{% block title %}Дневник{% endblock %}
+
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Мои записи</h2>
-    <a href="{% url 'diary:entry_create' %}" class="btn btn-success">+ Новая запись</a>
+    <h2 class="fw-bold text-success">
+        <i class="fas fa-book-open me-2"></i>Мои записи
+    </h2>
+    <a href="{% url 'diary:entry_create' %}" class="btn btn-success px-4 btn-diary">
+        <i class="fas fa-plus me-2"></i>Новая запись
+    </a>
+</div>
+
+<!-- БЛОК ФИЛЬТРАЦИИ -->
+<div class="card border-0 shadow-sm mb-4" style="border-radius: 20px; overflow: visible;">
+    <div class="card-header text-white py-3">
+        <i class="fas fa-filter me-2"></i>Фильтры и поиск
+    </div>
+    <div class="card-body p-4">
+        <form method="get" action="" id="filter-form">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold text-secondary mb-2">
+                        <i class="fas fa-heading me-1 text-success"></i>Поиск по названию
+                    </label>
+                    <input type="text" name="search_title" class="form-control custom-input" placeholder="Например: Прогулка" value="{{ search_title }}">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold text-secondary mb-2">
+                        <i class="fas fa-calendar-day me-1 text-success"></i>Поиск по дате
+                    </label>
+                    <input type="date" name="search_date" class="form-control custom-input" value="{{ search_date }}">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold text-secondary mb-2">
+                        <i class="fas fa-smile me-1 text-success"></i>Настроение
+                    </label>
+                    <div class="dropdown w-100">
+                        <button class="btn btn-outline-secondary w-100 text-start d-flex justify-content-between align-items-center custom-dropdown"
+                                type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                            <span id="emotions-selected-label">Выберите эмоции</span>
+                            <i class="fas fa-chevron-down small"></i>
+                        </button>
+                        <ul class="dropdown-menu p-3 shadow-sm" style="max-height: 300px; overflow-y: auto;">
+                            <li class="mb-2 pb-2 border-bottom">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="emotion_all" onclick="toggleAllEmotions(this)">
+                                    <label class="form-check-label fw-bold" for="emotion_all">Все эмоции</label>
+                                </div>
+                            </li>
+                            {% for emotion in all_emotions %}
+                            <li class="mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input emotion-checkbox" type="checkbox" name="emotions" value="{{ emotion.id }}" id="emotion_{{ emotion.id }}"
+                                           {% if emotion.id in selected_emotions %}checked{% endif %}
+                                           onchange="updateSelectedLabels()">
+                                    <label class="form-check-label" for="emotion_{{ emotion.id }}">
+                                        {{ emotion.emoji }} {{ emotion.name }}
+                                    </label>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold text-secondary mb-2">
+                        <i class="fas fa-tags me-1 text-success"></i>Теги
+                    </label>
+                    <div class="dropdown w-100">
+                        <button class="btn btn-outline-secondary w-100 text-start d-flex justify-content-between align-items-center custom-dropdown"
+                                type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                            <span id="tags-selected-label">Выберите теги</span>
+                            <i class="fas fa-chevron-down small"></i>
+                        </button>
+                        <ul class="dropdown-menu p-3 shadow-sm" style="max-height: 300px; overflow-y: auto;">
+                            <li class="mb-2 pb-2 border-bottom">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="tag_all" onclick="toggleAllTags(this)">
+                                    <label class="form-check-label fw-bold" for="tag_all">Все теги</label>
+                                </div>
+                            </li>
+                            {% for tag in all_tags %}
+                            <li class="mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input tag-checkbox" type="checkbox" name="tags" value="{{ tag.id }}" id="tag_{{ tag.id }}"
+                                           {% if tag.id in selected_tags %}checked{% endif %}
+                                           onchange="updateSelectedLabels()">
+                                    <label class="form-check-label" for="tag_{{ tag.id }}">
+                                        #{{ tag.name }}
+                                    </label>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-12 mt-3">
+                    <button type="submit" class="btn btn-success px-4 btn-diary">
+                        <i class="fas fa-search me-2"></i>Применить
+                    </button>
+                    <a href="{% url 'diary:entry_list' %}" class="btn btn-outline-secondary px-4 btn-diary">
+                        <i class="fas fa-undo-alt me-2"></i>Сбросить
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
 
 {% if entries %}
-    {% for entry in entries %}
-        <div class="card mb-3">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <h5 class="card-title">{{ entry.title }}</h5>
-                        <p class="card-text text-muted">
-                            {{ entry.date|date:"d.m.Y" }} • {{ entry.emotion.emoji }} {{ entry.emotion.name }}
-                            {% if entry.tags.all %}
-                                • 
-                                {% for tag in entry.tags.all %}
-                                    <span class="badge bg-secondary">{{ tag.name }}</span>
-                                {% endfor %}
+    <div class="row g-3">
+        {% for entry in entries %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm entry-card" style="border-radius: 20px;">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-success px-3 py-2 rounded-pill">
+                                {{ entry.emotion.emoji }} {{ entry.emotion.name }}
+                            </span>
+                            <small class="text-muted">
+                                <i class="fas fa-calendar-alt me-1"></i>{{ entry.date|date:"d.m.Y" }}
+                            </small>
+                        </div>
+
+                        <h5 class="card-title fw-bold mt-2">
+                            <a href="{% url 'diary:entry_detail' entry.pk %}" class="text-decoration-none text-dark">
+                                {{ entry.title }}
+                            </a>
+                        </h5>
+
+                        <p class="card-text text-muted small mb-3">{{ entry.content|truncatewords:15 }}</p>
+
+                        <div>
+                            {% for tag in entry.tags.all|slice:":3" %}
+                                <span class="badge bg-light text-secondary me-1 py-2 px-3 rounded-pill">#{{ tag.name }}</span>
+                            {% endfor %}
+                            {% if entry.tags.count > 3 %}
+                                <span class="badge bg-light text-secondary py-2 px-3 rounded-pill">+{{ entry.tags.count|add:"-3" }}</span>
                             {% endif %}
-                        </p>
-                        <p class="card-text">{{ entry.content|truncatewords:30 }}</p>
+                        </div>
                     </div>
-                    <div>
-                        <a href="{% url 'diary:entry_edit' entry.pk %}" class="btn btn-sm btn-primary">Редактировать</a>
-                        <a href="{% url 'diary:entry_delete' entry.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+                    <div class="card-footer bg-transparent border-0 pb-3 px-4">
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'diary:entry_edit' entry.pk %}" class="btn btn-sm btn-outline-primary btn-diary">
+                                <i class="fas fa-edit me-1"></i>Редактировать
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger delete-btn btn-diary"
+                                    data-url="{% url 'diary:entry_delete' entry.pk %}">
+                                <i class="fas fa-trash me-1"></i>Удалить
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    {% endfor %}
+        {% endfor %}
+    </div>
 {% else %}
-    <p>У вас пока нет записей. <a href="{% url 'diary:entry_create' %}">Создайте первую запись</a></p>
+    <div class="alert alert-info text-center border-0 shadow-sm" style="border-radius: 20px;">
+        <i class="fas fa-info-circle fa-2x mb-2"></i>
+        <p class="mb-0">
+            {% if search_title or search_date or selected_emotions or selected_tags %}
+                Нет записей, соответствующих фильтрам.
+            {% else %}
+                У вас пока нет записей.
+            {% endif %}
+        </p>
+    </div>
 {% endif %}
+
+<style>
+    .custom-input {
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 14px;
+        transition: all 0.2s ease;
+    }
+    .custom-input:focus {
+        border-color: #8bc34a;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(139, 195, 74, 0.1);
+    }
+    .custom-dropdown {
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 10px 14px;
+        background-color: white;
+    }
+    .custom-dropdown:hover {
+        border-color: #8bc34a;
+    }
+    .entry-card {
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .entry-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+    }
+    .entry-card .btn {
+        position: relative;
+        z-index: 2;
+    }
+    .form-check-input:checked {
+        background-color: #8bc34a;
+        border-color: #8bc34a;
+    }
+    .btn-diary {
+        border-radius: 30px;
+        transition: all 0.5s ease;
+    }
+    .card-header {
+        background: linear-gradient(135deg, #6b8c42 0%, #8bc34a 100%);
+    }
+</style>
+
+<script>
+    function updateSelectedLabels() {
+    const selectedEmotions = document.querySelectorAll('.emotion-checkbox:checked');
+    const emotionLabel = document.getElementById('emotions-selected-label');
+    if (selectedEmotions.length === 0) {
+        emotionLabel.textContent = 'Выберите эмоции';
+    } else if (selectedEmotions.length === 1) {
+        const first = selectedEmotions[0];
+        const label = first.parentElement.querySelector('label').innerText;
+        emotionLabel.textContent = label;
+    } else {
+        emotionLabel.textContent = `Выбрано: ${selectedEmotions.length}`;
+    }
+
+    const selectedTags = document.querySelectorAll('.tag-checkbox:checked');
+    const tagLabel = document.getElementById('tags-selected-label');
+    if (selectedTags.length === 0) {
+        tagLabel.textContent = 'Выберите теги';
+    } else if (selectedTags.length === 1) {
+        const first = selectedTags[0];
+        const label = first.parentElement.querySelector('label').innerText;
+        tagLabel.textContent = label;
+    } else {
+        tagLabel.textContent = `Выбрано: ${selectedTags.length}`;
+    }
+}
+
+function toggleAllEmotions(checkbox) {
+    document.querySelectorAll('.emotion-checkbox').forEach(cb => cb.checked = checkbox.checked);
+    updateSelectedLabels();
+}
+
+function toggleAllTags(checkbox) {
+    document.querySelectorAll('.tag-checkbox').forEach(cb => cb.checked = checkbox.checked);
+    updateSelectedLabels();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateSelectedLabels();
+
+    document.querySelectorAll('.entry-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            if (!e.target.closest('.btn')) {
+                const link = this.querySelector('.card-title a');
+                if (link) window.location.href = link.href;
+            }
+        });
+    });
+
+    if (typeof Swal !== 'undefined') {
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const url = btn.dataset.url;
+
+                Swal.fire({
+                    title: 'Удалить запись?',
+                    text: 'Это действие необратимо. Запись будет удалена навсегда.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Да, удалить',
+                    cancelButtonText: 'Отмена',
+                    background: '#fefefe',
+                    customClass: {
+                        popup: 'rounded-4',
+                        confirmButton: 'btn btn-danger px-4',
+                        cancelButton: 'btn btn-secondary px-4'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Удалено!',
+                            text: 'Запись успешно удалена',
+                            confirmButtonColor: '#28a745',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                        setTimeout(() => {
+                            window.location.href = url;
+                        }, 500);
+                    }
+                });
+            });
+        });
+    }
+});
+</script>
 {% endblock %}

@@ -1,55 +1,168 @@
 {% extends "base.html" %}
-{% load static %}
+
+{% block title %}Профиль{% endblock %}
 
 {% block content %}
-<h2>Профиль пользователя</h2>
+<h2 class="mb-4 fw-bold text-success">
+    <i class="fas fa-user-circle me-2"></i>Профиль пользователя
+</h2>
 
 <div class="row">
-    <div class="col-md-4 text-center">
-        <img src="{{ profile.avatar.url }}" alt="avatar" width="150" height="150" style="border-radius: 50%; object-fit: cover;">
+    <div class="col-md-4 text-center mb-3 mb-md-0">
+        <div class="card border-0 shadow-sm" style="border-radius: 20px; overflow: hidden;">
+            <div class="card-body p-4">
+                <img src="{{ profile.avatar.url }}" alt="avatar" width="150" height="150" style="border-radius: 50%; object-fit: cover; border: 3px solid #8bc34a; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                <h5 class="mt-3 mb-0 fw-bold text-success">{{ user.username }}</h5>
+                <p class="text-muted small">Дата регистрации: {{ user.date_joined|date:"d.m.Y" }}</p>
+            </div>
+        </div>
     </div>
 
     <div class="col-md-8">
-        <table class="table">
-            <tr>
-                <th>Имя пользователя:</th>
-                <td>{{ user.username }}</td>
-            </tr>
-            <tr>
-                <th>Имя:</th>
-                <td>{{ user.first_name|default:"—" }}</td>
-            </tr>
-            <tr>
-                <th>Фамилия:</th>
-                <td>{{ user.last_name|default:"—" }}</td>
-            </tr>
-            <tr>
-                <th>Email:</th>
-                <td>{{ user.email }}</td>
-            </tr>
-            <tr>
-                <th>Телефон:</th>
-                <td>{{ profile.phone|default:"—" }}</td>
-            </tr>
-            <tr>
-                <th>Дата рождения:</th>
-                <td>{{ profile.birth_date|date:"d.m.Y"|default:"—" }}</td>
-            </tr>
-            <tr>
-                <th>Дата регистрации:</th>
-                <td>{{ user.date_joined|date:"d.m.Y" }}</td>
-            </tr>
-        </table>
-
-        <div class="mt-3">
-            <a href="{% url 'accounts:profile_edit' %}" class="btn btn-primary">Редактировать</a>
-            <a href="{% url 'accounts:profile_delete' %}" class="btn btn-danger">Удалить аккаунт</a>
+        <div class="card border-0 shadow-sm" style="border-radius: 20px; overflow: hidden;">
+            <div class="card-header text-white">
+                <i class="fas fa-info-circle me-2"></i>Личная информация
+            </div>
+            <div class="card-body p-4">
+                <table class="table table-borderless">
+                    <tr>
+                        <th style="width: 40%; color: #4a6b2f;"><i class="fas fa-user me-2"></i>Логин:</th>
+                        <td>{{ user.username }}</td>
+                    </tr>
+                    <tr>
+                        <th style="color: #4a6b2f;"><i class="fas fa-user me-2"></i>Имя:</th>
+                        <td>{{ user.first_name }}</td>
+                    </tr>
+                    <tr>
+                        <th style="color: #4a6b2f;"><i class="fas fa-user me-2"></i>Фамилия:</th>
+                        <td>{{ user.last_name }}</td>
+                    </tr>
+                    <tr>
+                        <th style="color: #4a6b2f;"><i class="fas fa-envelope me-2"></i>Email:</th>
+                        <td>{{ user.email }}</td>
+                    </tr>
+                    <tr>
+                        <th style="color: #4a6b2f;"><i class="fas fa-phone me-2"></i>Телефон:</th>
+                        <td>{{ profile.phone|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <th style="color: #4a6b2f;"><i class="fas fa-birthday-cake me-2"></i>Дата рождения:</th>
+                        <td>{{ profile.birth_date|date:"d.m.Y"|default:"—" }}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="card-footer bg-transparent border-0 p-4 pt-0">
+                <div class="d-flex gap-2">
+                    <a href="{% url 'accounts:profile_edit' %}" class="btn btn-success px-4 btn-profile">
+                        <i class="fas fa-edit me-2"></i>Редактировать
+                    </a>
+                    <form method="post" action="{% url 'accounts:profile_delete' %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger delete-account-btn btn-profile">
+                            <i class="fas fa-trash-alt me-2"></i>Удалить аккаунт
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'accounts:logout' %}" class="d-inline" >
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-secondary logout-btn btn-profile" style="border-radius: 30px;">
+                            <i class="fas fa-sign-out-alt me-2"></i>Выйти
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
-
-        <form method="post" action="{% url 'accounts:logout' %}" class="mt-2">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-outline-danger">Выйти</button>
-        </form>
     </div>
 </div>
+
+<style>
+    .card-header {
+        background: linear-gradient(135deg, #6b8c42 0%, #8bc34a 100%);
+    }
+    .table tr td, .table tr th {
+        padding: 12px 8px;
+        vertical-align: middle;
+    }
+    .table tr {
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .table tr:last-child {
+        border-bottom: none;
+    }
+    .btn-profile {
+            border-radius: 30px;
+            transition: all 0.5s ease;
+        }
+</style>
+
+<script>
+    if (typeof Swal !== 'undefined') {
+        // Подтверждение удаления аккаунта
+        document.querySelectorAll('.delete-account-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const url = this.dataset.url;
+
+                Swal.fire({
+                    title: 'Удалить аккаунт?',
+                    text: 'Это действие необратимо. Все ваши записи и привычки будут удалены навсегда.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Да, удалить',
+                    cancelButtonText: 'Отмена',
+                    background: '#fefefe',
+                    customClass: {
+                        popup: 'rounded-4',
+                        confirmButton: 'btn btn-danger px-4',
+                        cancelButton: 'btn btn-secondary px-4'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Удалено!',
+                            text: 'Аккаунт успешно удален',
+                            confirmButtonColor: '#28a745',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                        setTimeout(() => {
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = url;
+                            form.innerHTML = '{% csrf_token %}';
+                            document.body.appendChild(form);
+                            form.submit();
+                        }, 500);
+                    }
+                });
+            });
+        });
+
+        // Подтверждение выхода из аккаунта
+        document.querySelectorAll('.logout-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Выйти из аккаунта?',
+                    text: 'Вы будете перенаправлены на главную страницу.',
+                    icon: 'question',
+                    showCancelButton: true,
+
+                    confirmButtonText: 'Да, выйти',
+                    cancelButtonText: 'Отмена',
+                    background: '#fefefe',
+                    customClass: {
+                        popup: 'rounded-4',
+                        confirmButton: 'btn btn-danger px-4',
+                        cancelButton: 'btn btn-secondary px-4'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        btn.closest('form').submit();
+                    }
+                });
+            });
+        });
+    }
+</script>
 {% endblock %}

@@ -1,32 +1,161 @@
 {% extends "base.html" %}
 
+{% block title %}Редактирование профиля{% endblock %}
+
+{% block content_class %}no-bg{% endblock %}
+
 {% block content %}
-<h2>Редактирование профиля</h2>
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-8">
+        <div class="card border-0 shadow-sm" style="border-radius: 20px; overflow: hidden;">
+            <div class="card-header text-white py-3">
+                <i class="fas fa-user-edit me-2"></i>Редактирование профиля
+            </div>
 
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
+            <div class="card-body p-4">
+                <form method="post" enctype="multipart/form-data" id="profileForm">
+                    {% csrf_token %}
+                    <div class="mb-4 text-center">
+                        <label class="form-label fw-semibold text-secondary mb-2">Текущий аватар</label>
+                        <div class="mt-2">
+                            <img src="{{ profile.avatar.url }}" alt="avatar" width="100" height="100" style="border-radius: 50%; object-fit: cover; border: 2px solid #8bc34a;">
+                            <div class="mt-2">
+                                {% if profile.avatar.name != 'images/avatars/default.png' %}
+                                    <button type="button" class="btn btn-sm btn-outline-danger" id="deleteAvatarBtn" style="border-radius: 20px;">
+                                        <i class="fas fa-trash-alt me-1"></i>Удалить аватар
+                                    </button>
+                                {% endif %}
+                            </div>
+                            <input type="hidden" name="delete_avatar" id="deleteAvatar" value="">
+                        </div>
+                    </div>
 
-    {% for field in user_form %}
-        <div class="mb-3">
-            <label class="form-label">{{ field.label }}</label>
-            {{ field }}
-            {% if field.errors %}
-                <div class="text-danger">{{ field.errors }}</div>
-            {% endif %}
+                    {% for field in user_form %}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary mb-2">{{ field.label }}</label>
+                            <input type="{{ field.field.widget.input_type }}"
+                                   name="{{ field.name }}"
+                                   value="{{ field.value|default:'' }}"
+                                   class="custom-input"
+                                   {% if field.field.required %}required{% endif %}>
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">{{ field.errors }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    {% for field in profile_form %}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary mb-2">{{ field.label }}</label>
+                            {% if field.name == 'avatar' %}
+                                <input type="file" name="{{ field.name }}" class="custom-file-input">
+                            {% elif field.name == 'birth_date' %}
+                                <input type="date" name="{{ field.name }}" value="{{ field.value|date:'Y-m-d'|default:'' }}" class="custom-input">
+                            {% else %}
+                                <input type="text" name="{{ field.name }}" value="{{ field.value|default:'' }}" class="custom-input">
+                            {% endif %}
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">{{ field.errors }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-success px-4 btn-edit">
+                            <i class="fas fa-save me-2"></i>Сохранить
+                        </button>
+                        <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary px-4 btn-edit">
+                            <i class="fas fa-times me-2"></i>Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
         </div>
-    {% endfor %}
+    </div>
+</div>
 
-    {% for field in profile_form %}
-        <div class="mb-3">
-            <label class="form-label">{{ field.label }}</label>
-            {{ field }}
-            {% if field.errors %}
-                <div class="text-danger">{{ field.errors }}</div>
-            {% endif %}
-        </div>
-    {% endfor %}
-    
-    <button type="submit" class="btn btn-success">Сохранить</button>
-    <a href="{% url 'accounts:profile' %}" class="btn btn-secondary">Отмена</a>
-</form>
+<style>
+    .custom-input {
+        width: 100%;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 14px;
+        font-family: inherit;
+        background-color: #fafbfc;
+        transition: all 0.2s ease;
+    }
+    .custom-input:focus {
+        outline: none;
+        border-color: #8bc34a;
+        background-color: #ffffff;
+        box-shadow: 0 0 0 3px rgba(139, 195, 74, 0.1);
+    }
+    .custom-file-input {
+        width: 100%;
+        border: 2px dashed #e2e8f0;
+        border-radius: 12px;
+        padding: 8px 12px;
+        font-size: 14px;
+        background-color: #fafbfc;
+        cursor: pointer;
+    }
+    .custom-file-input:hover {
+        border-color: #8bc34a;
+    }
+    .card-header {
+        background: linear-gradient(135deg, #6b8c42 0%, #8bc34a 100%);
+    }
+    .main-content.no-bg {
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+    .btn-edit {
+            border-radius: 30px;
+            transition: all 0.5s ease;
+        }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const deleteBtn = document.getElementById('deleteAvatarBtn');
+    const deleteAvatarInput = document.getElementById('deleteAvatar');
+    const profileForm = document.getElementById('profileForm');
+
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Удалить аватар?',
+                text: 'После удаления будет установлен стандартный аватар.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Да, удалить',
+                cancelButtonText: 'Отмена',
+                background: '#fefefe',
+                customClass: {
+                    popup: 'rounded-4',
+                    confirmButton: 'btn btn-danger px-4',
+                    cancelButton: 'btn btn-secondary px-4'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Удалено!',
+                        text: 'Аватар успешно удален',
+                        confirmButtonColor: '#28a745',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    setTimeout(() => {
+                        deleteAvatarInput.value = 'true';
+                        profileForm.submit();
+                    }, 500);
+                }
+            });
+        });
+    }
+});
+</script>
 {% endblock %}

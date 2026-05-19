@@ -49,10 +49,10 @@ class CustomAuthenticationForm(AuthenticationForm):
         return self.cleaned_data
 
 class UserUpdateForm(forms.ModelForm):
-    username = forms.CharField(max_length=150, required=True, label='Имя пользователя')
+    username = forms.CharField(max_length=150, required=True, label='Логин')
     email = forms.EmailField(required=True, label='Email')
-    first_name = forms.CharField(max_length=30, required=False, label='Имя')
-    last_name = forms.CharField(max_length=30, required=False, label='Фамилия')
+    first_name = forms.CharField(max_length=30, required=True, label='Имя')
+    last_name = forms.CharField(max_length=30, required=True, label='Фамилия')
 
     class Meta:
         model = User

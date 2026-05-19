@@ -1,21 +1,112 @@
 {% extends "base.html" %}
 
+{% block title %}Новая привычка{% endblock %}
+
 {% block content %}
-<h2>{{ title }}</h2>
-<form method="post">
-    {% csrf_token %}
-    
-    {% for field in form %}
-        <div class="mb-3">
-            <label class="form-label">{{ field.label }}</label>
-            {{ field }}
-            {% if field.errors %}
-                <div class="text-danger">{{ field.errors }}</div>
-            {% endif %}
+<div class="container py-3">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm" style="border-radius: 25px; overflow: hidden;">
+                <div class="card-header bg-success text-white py-3" style="border: none;">
+                    <i class="fas fa-plus-circle me-2"></i>{{ title }}
+                </div>
+
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% for field in form %}
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold text-secondary mb-2">
+                                    {% if field.field.required %}
+                                        <span class="text-danger">*</span>
+                                    {% endif %}
+                                    {{ field.label }}
+                                </label>
+                                {% if field.name == 'description' %}
+                                    <textarea name="{{ field.name }}"
+                                              class="form-control custom-input"
+                                              rows="3"
+                                              placeholder="Например: Пить 2 литра воды в день">{% if field.value %}{{ field.value }}{% endif %}</textarea>
+                                {% elif field.name == 'category' %}
+                                    <select name="{{ field.name }}" class="form-select custom-input">
+                                        <option value="">-- Выберите категорию --</option>
+                                        {% for choice in field.field.queryset %}
+                                            <option value="{{ choice.id }}" {% if field.value == choice.id %}selected{% endif %}>
+                                                {{ choice.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                {% else %}
+                                    <input type="text"
+                                           name="{{ field.name }}"
+                                           class="form-control custom-input"
+                                           value="{{ field.value|default:'' }}"
+                                           placeholder="Введите {{ field.label|lower }}"
+                                           {% if field.field.required %}required{% endif %}>
+                                {% endif %}
+
+                                {% if field.help_text %}
+                                    <small class="text-muted d-block mt-1">{{ field.help_text }}</small>
+                                {% endif %}
+
+                                {% if field.errors %}
+                                    <div class="text-danger small mt-2">
+                                        {% for error in field.errors %}
+                                            <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-success px-4 btn-habit">
+                                <i class="fas fa-save me-2"></i>Сохранить
+                            </button>
+                            <a href="{% url 'habits:habit_list' %}" class="btn btn-outline-secondary px-4 btn-habit ">
+                                <i class="fas fa-times me-2"></i>Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-    {% endfor %}
-    
-    <button type="submit" class="btn btn-success">Сохранить</button>
-    <a href="{% url 'habits:habit_list' %}" class="btn btn-secondary">Отмена</a>
-</form>
+    </div>
+</div>
+
+<style>
+    .custom-input {
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        width: 100%;
+    }
+
+    .custom-input:focus {
+        border-color: #8bc34a;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(139, 195, 74, 0.1);
+    }
+
+    textarea.custom-input {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .card-header {
+        background: linear-gradient(135deg, #6b8c42 0%, #8bc34a 100%);
+    }
+
+    .form-select.custom-input {
+        background-color: white;
+        cursor: pointer;
+    }
+    .btn-habit {
+        border-radius: 30px;
+        transition: all 0.5s ease;
+    }
+</style>
 {% endblock %}

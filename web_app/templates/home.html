@@ -1,19 +1,175 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Главная{% endblock %}
 
 {% block content %}
-    <h1>Отслеживай свои эмоции и формируй привычки</h1>
-    <p>Веди дневник настроения, отслеживай привычки и получай персонализированные рекомендации от AI-ассистента.</p>
+<!-- Hero секция -->
+<div class="text-center mb-4 p-4 rounded-4" style="background: #dcedc8;">
+    <h2 class="fw-bold text-success mb-2">
+        🌱 Отслеживай свои эмоции и формируй привычки
+    </h2>
+    <p class="text-secondary mb-3">
+        Веди дневник настроения, отслеживай привычки и получай персонализированные рекомендации от AI-ассистента.
+    </p>
+</div>
 
-    <h3>Здесь ты можешь:</h3>
-    <ul>
-        <li>Описывать своё настроение каждый день. Выбирать дневную эмоцию и теги дня.</li>
-        <li>Создавать привычки и отмечать их выполнение.</li>
-        <li>Смотреть календари настроения и прогресса привычек.</li>
-        <li>В случае необходимости получать аналитику и советы от AI-ассистента на основе твоих записей.</li>
-    </ul>
+<!-- Статистика (если авторизован) -->
+{% if user.is_authenticated %}
+    <div class="row mb-4 g-3">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center p-2" style="border-radius: 20px;">
+                <div class="card-body">
+                    <i class="fas fa-smile fa-2x text-success mb-2"></i>
+                    <h3 class="h3 fw-bold text-success">{{ diary_count }}</h3>
+                    <p class="text-muted small">записей в дневнике</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center p-2" style="border-radius: 20px;">
+                <div class="card-body">
+                    <i class="fas fa-fire fa-2x text-warning mb-2"></i>
+                    <h3 class="h3 fw-bold text-success">{{ diary_streak }}</h3>
+                    <p class="text-muted small">дней подряд (дневник)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center p-2" style="border-radius: 20px;">
+                <div class="card-body">
+                    <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                    <h3 class="h3 fw-bold text-success">{{ habits_count }}</h3>
+                    <p class="text-muted small">активных привычек</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center p-2" style="border-radius: 20px;">
+                <div class="card-body">
+                    <i class="fas fa-calendar-check fa-2x text-info mb-2"></i>
+                    <h3 class="h3 fw-bold text-success">{{ habit_streak }}</h3>
+                    <p class="text-muted small">дней подряд (привычки)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
 
-    <h3>Почему это полезно?</h3>
-    <p>Регулярное отслеживание эмоций и привычек помогает лучше понимать себя, снижать уровень стресса и достигать поставленных целей. А AI-ассистент заметит то, что ты мог упустить, и даст персонализированную рекомендацию.</p>
+<!-- Карточки возможностей -->
+<h4 class="text-center mb-3 fw-bold text-success">
+    <i class="fas fa-star me-2"></i>Что ты можешь делать?
+</h4>
+<div class="row mb-4 g-3">
+    <div class="col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm text-center p-2" style="border-radius: 20px;">
+            <div class="card-body">
+                <div class="rounded-circle bg-success bg-opacity-10 d-inline-flex p-2 mb-2">
+                    <i class="fas fa-pen text-success"></i>
+                </div>
+                <h6 class="card-title fw-bold">Дневник настроения</h6>
+                <p class="card-text text-muted small">Описывай своё настроение каждый день. Выбирай эмоции и добавляй теги.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm text-center p-2" style="border-radius: 20px;">
+            <div class="card-body">
+                <div class="rounded-circle bg-success bg-opacity-10 d-inline-flex p-2 mb-2">
+                    <i class="fas fa-calendar-check text-success"></i>
+                </div>
+                <h6 class="card-title fw-bold">Трекер привычек</h6>
+                <p class="card-text text-muted small">Создавай привычки и отмечай их выполнение. Следи за прогрессом.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm text-center p-2" style="border-radius: 20px;">
+            <div class="card-body">
+                <div class="rounded-circle bg-success bg-opacity-10 d-inline-flex p-2 mb-2">
+                    <i class="fas fa-chart-line text-success"></i>
+                </div>
+                <h6 class="card-title fw-bold">Визуализация</h6>
+                <p class="card-text text-muted small">Смотри календари настроения и прогресса привычек в наглядном виде.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm text-center p-2" style="border-radius: 20px;">
+            <div class="card-body">
+                <div class="rounded-circle bg-success bg-opacity-10 d-inline-flex p-2 mb-2">
+                    <i class="fas fa-robot text-success"></i>
+                </div>
+                <h6 class="card-title fw-bold">AI-ассистент</h6>
+                <p class="card-text text-muted small">Получай персонализированные советы и аналитику на основе записей.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Блок "Почему это полезно" -->
+<div class="row align-items-center mb-4 p-3 rounded-4" style="background: #c8e6c9;">
+    <div class="col-md-5">
+        <img src="https://cdn-icons-png.flaticon.com/512/7185/7185729.png" alt="Benefits" class="img-fluid" style="max-width: 70%; display: block; margin: 0 auto;">
+    </div>
+    <div class="col-md-7">
+        <h5 class="fw-bold text-success mb-3">
+            <i class="fas fa-heart me-2"></i>Почему это полезно?
+        </h5>
+        <ul class="list-unstyled small">
+            <li class="mb-2">
+                <i class="fas fa-check-circle text-success me-2"></i>
+                <strong>Саморефлексия</strong> — лучше понимай свои эмоции и триггеры
+            </li>
+            <li class="mb-2">
+                <i class="fas fa-check-circle text-success me-2"></i>
+                <strong>Снижение стресса</strong> — регулярное ведение дневника помогает в этом
+            </li>
+            <li class="mb-2">
+                <i class="fas fa-check-circle text-success me-2"></i>
+                <strong>Дисциплина</strong> — привычки формируют характер
+            </li>
+            <li class="mb-2">
+                <i class="fas fa-check-circle text-success me-2"></i>
+                <strong>Прогресс</strong> — замечай свои достижения и развивайся
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!-- Блок действий -->
+{% if user.is_authenticated %}
+    <div class="text-center p-4 rounded-4" style="background: #dcedc8;">
+        <h5 class="fw-bold text-success mb-3">✍️ Запиши своё настроение сегодня</h5>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'diary:entry_create' %}" class="btn btn-success btn-md btn-home">
+                <i class="fas fa-pen me-2"></i>Создать запись
+            </a>
+            <a href="{% url 'habits:habit_list' %}" class="btn btn-outline-success btn-home">
+                <i class="fas fa-check-circle me-2"></i>Отметить привычки
+            </a>
+        </div>
+    </div>
+{% else %}
+    <div class="text-center p-4 rounded-4" style="background: #dcedc8;">
+        <h5 class="fw-bold text-success mb-3">Готов начать свой путь к осознанности?</h5>
+        <p class="mb-3 small text-muted">Присоединяйся к тем, кто уже заботится о своём эмоциональном состоянии</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'accounts:register' %}" class="btn btn-success btn-md btn-home">
+                <i class="fas fa-user-plus me-2"></i>Создать аккаунт
+            </a>
+            <a href="{% url 'accounts:login' %}" class="btn btn-outline-success btn-home">
+                <i class="fas fa-sign-in-alt me-2"></i>Войти
+            </a>
+        </div>
+    </div>
+{% endif %}
+
+<style>
+    .btn-home {
+            border-radius: 30px;
+            padding: 10px 25px;
+            transition: all 0.5s ease;
+        }
+</style>
 {% endblock %}

@@ -11,7 +11,8 @@ class Emotion(models.Model):
         verbose_name_plural = 'Эмоции'
 
     def __str__(self):
-        return self.name
+        return f"{self.emoji} {self.name}"
+
 
 class Tag(models.Model):
     name = models.CharField(max_length=50, verbose_name='Название тега')

@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
-from django.conf import settings
 from .forms import CustomUserCreationForm
 from .models import Profile
 from .forms import UserUpdateForm, ProfileUpdateForm
@@ -11,17 +10,22 @@ def profile(request):
     profile = Profile.objects.get(user=request.user)
     return render(request, 'accounts/profile.html', {'profile': profile})
 
+
 def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            profile = user.profile  # или Profile.objects.get(user=user)
-            profile.phone = form.cleaned_data.get('phone', '')
-            profile.birth_date = form.cleaned_data.get('birth_date')
-            profile.save()
-            user.backend = settings.AUTHENTICATION_BACKENDS[0]
-            login(request, user)
+
+            profile, created = Profile.objects.update_or_create(
+                user=user,
+                defaults={
+                    'phone': form.cleaned_data.get('phone', ''),
+                    'birth_date': form.cleaned_data.get('birth_date')
+                }
+            )
+
+            login(request, user, backend='apps.accounts.backends.EmailOrUsernameBackend')
             return redirect('home')
     else:
         form = CustomUserCreationForm()
@@ -33,6 +37,11 @@ def profile_edit(request):
     profile = get_object_or_404(Profile, user=request.user)
 
     if request.method == 'POST':
+        if request.POST.get('delete_avatar') == 'true':
+            profile.avatar = 'images/avatars/default.png'
+            profile.save()
+            return redirect('accounts:profile_edit')
+
         user_form = UserUpdateForm(request.POST, instance=request.user)
         profile_form = ProfileUpdateForm(request.POST, request.FILES, instance=profile)
 
@@ -46,7 +55,8 @@ def profile_edit(request):
 
     return render(request, 'accounts/profile_edit.html', {
         'user_form': user_form,
-        'profile_form': profile_form
+        'profile_form': profile_form,
+        'profile': profile,
     })
 
 
@@ -56,4 +66,4 @@ def profile_delete(request):
         user = request.user
         user.delete()
         return redirect('home')
-    return render(request, 'accounts/profile_delete.html')
+    return redirect('accounts:profile')
